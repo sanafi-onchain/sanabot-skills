@@ -19,5 +19,13 @@
     "mcp",
     "model-context-protocol",
     "agent-skills"
-  ]
+  ],
+  "mcpServers": {
+    "sanabot": {
+      "url": "https://mcp.sana.bot/mcp",
+      "headers": {
+        "Authorization": "Bearer ${SANABOT_API_KEY}"
+      }
+    }
+  }
 }
