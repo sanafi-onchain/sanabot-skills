@@ -1,0 +1,20 @@
+{
+  "name": "sanafi",
+  "owner": {
+    "name": "Sanafi",
+    "url": "https://sana.bot"
+  },
+  "metadata": {
+    "description": "Agent skills for the Sanafi super-app on Solana. Teaches your AI agent to use the hosted Sanabot MCP gateway at mcp.sana.bot to query wallet, prices, transactions, and card."
+  },
+  "plugins": [
+    {
+      "name": "sanabot-skills",
+      "source": {
+        "source": "github",
+        "repo": "sanafi-onchain/sanabot-skills"
+      },
+      "description": "Sanafi skills: portfolio, prices, card, transactions, notifications. Routes every call through the hosted MCP gateway at mcp.sana.bot using the user's API key."
+    }
+  ]
+}
