@@ -27,13 +27,13 @@ Each `skills/<name>/SKILL.md` is **prompt-time instructions for the agent** — 
    - Default scope `read:all` covers every skill below. See [`docs/scopes.md`](docs/scopes.md) for narrower options.
 3. **Expose it to your agent as an env var:**
    ```bash
-   export SANABOT_API_KEY=sk_...
+   export SANABOT_API_KEY=sana_live_...
    ```
    Add the line to your shell profile (`~/.zshrc`, `~/.bashrc`, etc.) so it persists across restarts.
 
 ## Install
 
-> 🔑 **About `${SANABOT_API_KEY}` in the snippets below:** environment-variable expansion in MCP `headers` works in **config files** (`.mcp.json`, `~/.gemini/settings.json`, VS Code `settings.json`, etc.) but **does not work in interactive UI fields** on Cursor, Windsurf, and similar IDEs — those send the literal `${SANABOT_API_KEY}` string and the gateway answers 401. When a client expects the header through a UI form, **paste your literal `sk_...` key** instead.
+> 🔑 **About `${SANABOT_API_KEY}` in the snippets below:** environment-variable expansion in MCP `headers` works in **config files** (`.mcp.json`, `~/.gemini/settings.json`, VS Code `settings.json`, etc.) but **does not work in interactive UI fields** on Cursor, Windsurf, and similar IDEs — those send the literal `${SANABOT_API_KEY}` string and the gateway answers 401. When a client expects the header through a UI form, **paste your literal `sana_live_...` key** instead.
 
 <details>
 <summary><b>Claude Code (recommended)</b></summary>
@@ -60,7 +60,7 @@ Restart Claude Code. Skills appear automatically; the MCP server is registered v
 2. Open Cursor settings → **Features** → **MCP** → **Add new server**:
    - Name: `sanabot`
    - URL: `https://mcp.sana.bot/mcp`
-   - Header: `Authorization: Bearer sk_...` ← **paste your literal API key** (Cursor's MCP form does not expand env vars)
+   - Header: `Authorization: Bearer sana_live_...` ← **paste your literal API key** (Cursor's MCP form does not expand env vars)
 3. In Cursor settings → **Rules**, add a project or user rule pointing at the cloned skills:
    ```
    When the user asks about Sanafi, their Sanafi wallet, or Sanafi card,
@@ -102,12 +102,12 @@ Then add the MCP server to `~/.gemini/settings.json`:
 <summary><b>Windsurf</b></summary>
 
 1. Clone this repo locally.
-2. Open Windsurf settings → **Cascade** → **MCP Servers** → add the MCP config. **Paste your literal `sk_...` key** if entering via the settings UI; if you can edit the underlying config file directly, `${SANABOT_API_KEY}` is fine.
+2. Open Windsurf settings → **Cascade** → **MCP Servers** → add the MCP config. **Paste your literal `sana_live_...` key** if entering via the settings UI; if you can edit the underlying config file directly, `${SANABOT_API_KEY}` is fine.
    ```jsonc
    {
      "sanabot": {
        "serverUrl": "https://mcp.sana.bot/mcp",
-       "headers": { "Authorization": "Bearer sk_..." }
+       "headers": { "Authorization": "Bearer sana_live_..." }
      }
    }
    ```

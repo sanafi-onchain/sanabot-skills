@@ -26,7 +26,7 @@ The current Sanabot tool set covers the read flows below. If the user asks for s
 The user installs this skill pack via their agent's plugin marketplace (Claude Code, Cursor, etc.). The plugin ships a `.mcp.json` that registers the MCP server. The user only has to provide one secret:
 
 ```bash
-export SANABOT_API_KEY=sk_...
+export SANABOT_API_KEY=sana_live_...
 ```
 
 They generate this key at `https://sana.bot/gateway/app/api-keys` with the default `read:all` scope. If `$SANABOT_API_KEY` is unset, every Sanabot call returns 401.
