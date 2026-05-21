@@ -38,7 +38,9 @@ Each `skills/<name>/SKILL.md` is **prompt-time instructions for the agent** — 
 <details>
 <summary><b>Claude Code (recommended)</b></summary>
 
-Add this plugin marketplace, then install:
+Three steps. Claude Code's plugin loader handles skills but not URL-based MCP servers, so the MCP server is added separately.
+
+**1. Install the plugin** (loads the skill packs):
 
 ```bash
 claude plugin marketplace add sanafi-onchain/sanabot-skills
@@ -47,9 +49,31 @@ claude plugin install sanabot-skills@sanafi
 
 > Form is `<plugin-name>@<marketplace-name>` — the marketplace is `sanafi`, the plugin inside it is `sanabot-skills`.
 
-Restart Claude Code. Skills appear automatically; the MCP server is registered via the bundled `.mcp.json`.
+**2. Export your API key in the shell that will run Claude Code:**
 
-> Make sure `$SANABOT_API_KEY` is exported in the shell that launches Claude Code.
+```bash
+export SANABOT_API_KEY=sana_live_...
+```
+
+**3. Register the MCP server:**
+
+```bash
+claude mcp add sanabot --transport http https://mcp.sana.bot/mcp \
+  --header "Authorization: Bearer $SANABOT_API_KEY"
+```
+
+The double-quoted `$SANABOT_API_KEY` is expanded by your shell *at this moment* — the resulting literal value is what Claude stores. Restart Claude Code; verify with `claude mcp list` (you should see `sanabot`).
+
+> **Rotating the key:** if you ever revoke + regenerate, `export` alone is not enough — Claude has the old literal stored. Do:
+>
+> ```bash
+> claude mcp remove sanabot
+> export SANABOT_API_KEY=<new key>
+> claude mcp add sanabot --transport http https://mcp.sana.bot/mcp \
+>   --header "Authorization: Bearer $SANABOT_API_KEY"
+> ```
+>
+> Then restart Claude Code.
 
 </details>
 
@@ -96,6 +120,14 @@ Then add the MCP server to `~/.gemini/settings.json`:
 }
 ```
 
+Export the key in the shell that starts Gemini CLI:
+
+```bash
+export SANABOT_API_KEY=sana_live_...
+```
+
+> **Rotating the key:** Gemini expands `${SANABOT_API_KEY}` at runtime, so just `export SANABOT_API_KEY=<new key>` and restart Gemini CLI — no settings edit needed.
+
 </details>
 
 <details>
@@ -113,6 +145,8 @@ Then add the MCP server to `~/.gemini/settings.json`:
    ```
 3. Settings → **Memories & Rules** → add a rule pointing Windsurf at the cloned `skills/` directory for Sanafi-related questions.
 
+> **Rotating the key:** if you pasted a literal `sana_live_...` into the UI, you must open the same Windsurf MCP server config and replace the bearer value with the new key, then restart Windsurf. If you edited the underlying config file with `${SANABOT_API_KEY}`, just `export SANABOT_API_KEY=<new>` and restart.
+
 </details>
 
 <details>
@@ -122,9 +156,13 @@ Then add the MCP server to `~/.gemini/settings.json`:
 git clone https://github.com/sanafi-onchain/sanabot-skills.git
 cd sanabot-skills
 opencode plugin install .
+
+export SANABOT_API_KEY=sana_live_...
 ```
 
 OpenCode reads the `.mcp.json` and `skills/` from the cloned root automatically.
+
+> **Rotating the key:** OpenCode reads `${SANABOT_API_KEY}` from the env at runtime — just `export SANABOT_API_KEY=<new>` and restart OpenCode.
 
 </details>
 
@@ -144,6 +182,12 @@ Copilot in **VS Code** (with Agent Mode enabled):
    }
    ```
 3. Clone this repo and reference `skills/using-sanabot/SKILL.md` in a `.github/copilot-instructions.md` for the workspace, so Copilot pulls in the guidance when relevant.
+4. Export the key in the shell that started VS Code (or set it as a user env var on your OS):
+   ```bash
+   export SANABOT_API_KEY=sana_live_...
+   ```
+
+> **Rotating the key:** VS Code expands `${env:SANABOT_API_KEY}` at runtime — `export SANABOT_API_KEY=<new>` and reload VS Code is enough.
 
 </details>
 
@@ -168,7 +212,11 @@ Symlink the `skills/` folder into Kiro's skills directory:
 ```bash
 git clone https://github.com/sanafi-onchain/sanabot-skills.git
 ln -s "$(pwd)/sanabot-skills/skills"/* ~/.kiro/skills/
+
+export SANABOT_API_KEY=sana_live_...
 ```
+
+> **Rotating the key:** Kiro expands `${SANABOT_API_KEY}` at runtime — `export SANABOT_API_KEY=<new>` and restart Kiro is enough.
 
 </details>
 
@@ -184,6 +232,12 @@ For Codex and any other MCP-capable agent that supports Streamable HTTP transpor
    header: Authorization: Bearer ${SANABOT_API_KEY}
    ```
 3. Configure your agent to read `skills/*/SKILL.md` files at prompt time. The exact mechanism varies; check your agent's "skills" or "system instructions" documentation. If your agent has no skills mechanism, paste the contents of `skills/using-sanabot/SKILL.md` into the system prompt.
+4. Export the key in the shell that runs your agent:
+   ```bash
+   export SANABOT_API_KEY=sana_live_...
+   ```
+
+> **Rotating the key:** depends on the agent. If its config file uses `${SANABOT_API_KEY}` (env-var expansion at runtime), just `export` the new value and restart. If the agent stored a literal value (UI form, captured-at-write-time CLI), edit that stored value too.
 
 </details>
 

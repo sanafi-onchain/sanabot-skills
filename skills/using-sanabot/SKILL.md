@@ -23,13 +23,15 @@ The current Sanabot tool set covers the read flows below. If the user asks for s
 
 ## How the user wires it up
 
-The user installs this skill pack via their agent's plugin marketplace (Claude Code, Cursor, etc.). The plugin ships a `.mcp.json` that registers the MCP server. The user only has to provide one secret:
+The user installs this skill pack via their agent's plugin marketplace (Claude Code, Cursor, etc.) and exports one secret in their shell:
 
 ```bash
 export SANABOT_API_KEY=sana_live_...
 ```
 
 They generate this key at `https://sana.bot/gateway/app/api-keys` with the default `read:all` scope. If `$SANABOT_API_KEY` is unset, every Sanabot call returns 401.
+
+Depending on the agent, the user **also** registers the MCP server explicitly (Claude Code uses `claude mcp add ... --transport http https://mcp.sana.bot/mcp --header "Authorization: Bearer $SANABOT_API_KEY"`; Cursor/Windsurf use their MCP settings UI; Gemini/Copilot/Kiro/OpenCode edit a settings JSON file). Plugin install alone does NOT register URL-based MCP servers on every agent — the per-platform install in the public README has the exact step for each one. If the user reports tools aren't available, the agent should suggest they confirm both pieces: skill pack installed (loaded into the session) **and** MCP server registered (visible via the agent's own MCP-list command if it has one).
 
 ## Tools available
 
