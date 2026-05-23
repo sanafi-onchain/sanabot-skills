@@ -31,6 +31,8 @@ How to answer the most common portfolio-style questions about a Sanafi user usin
 | "What's my wallet address?" / "My email?" | `get_account` | — |
 | "Has anything happened recently?" | `get_notifications` | — |
 | "Did my deposit arrive?" | `get_notifications` | + `get_holdings` if they want the new balance |
+| "Swap SOL for USDC" / "Exchange into JUP" / "Convert / rebalance" | `wallet_swap` (see prerequisites below) | `get_holdings` to confirm post-swap balance |
+| "Send tokens to an external wallet" | Not available in Phase 1 — Sanafi app only | — |
 
 ## Net worth: one tool, one number
 
@@ -95,9 +97,47 @@ Internal identifiers (Privy ID, DB id, timestamps) are **deliberately not expose
 1. `get_notifications` to check for the deposit event.
 2. `get_holdings` to confirm the USDC balance reflects it.
 
+## Swap: `wallet_swap`
+
+Triggers: user wants to swap, exchange, trade, convert, rebalance, or DCA into a token.
+
+**Prerequisites before calling this tool:**
+1. Agent signing must be enabled on the user's wallet (one-time setup at `https://sana.bot/gateway/app/api-keys`). Without it, the call returns `403 DELEGATION_NOT_ENABLED`.
+2. The API key must carry the `write:swap` scope (not included in `read:all`). Missing scope returns `403 INSUFFICIENT_SCOPE`.
+3. The swap value must not exceed the key's per-transaction cap (default $50) or rolling 24h daily cap (default $200). Exceeding either returns `403 CAP_EXCEEDED`.
+
+**Input and output constraints:**
+- `input_mint` must be a token Sanafi has a USD price for. Tokens without a price can't be capped in USD terms, so they are rejected with `400 UNSUPPORTED_INPUT_TOKEN`.
+- `output_mint` must be on the agent's token allowlist (defaults to Sanafi's active supported-tokens catalogue). Non-allowlisted output returns `403 TOKEN_NOT_ALLOWED`. The user can override the allowlist per-agent in the dashboard.
+
+**Input:** `{ input_mint, output_mint, amount_in, idempotency_key? }` — mint addresses (not symbols). Use `get_supported_tokens` to resolve a symbol to a mint address if needed. Pass an `idempotency_key` (UUID) if retrying after a network error to avoid duplicate swaps.
+
+**Flow:**
+1. Confirm: which token the user wants to swap FROM (must be a token Sanafi prices), which token they want TO, and the amount.
+2. If the output token symbol is ambiguous, call `get_supported_tokens` to resolve the mint address.
+3. Check prerequisites: agent signing, scope, amount within cap, output on allowlist.
+4. Call `wallet_swap`.
+5. Surface the confirmation (transaction signature, `amountIn`, `amountOut`) in plain language.
+6. Optionally call `get_holdings` to show the updated balance.
+
+**Error handling:**
+- `403 DELEGATION_NOT_ENABLED` → "Enable agent signing in the Sanafi dashboard first."
+- `403 INSUFFICIENT_SCOPE` → "Add `write:swap` to your API key."
+- `403 CAP_EXCEEDED` → "This swap exceeds your agent's spending cap — raise the cap in the dashboard or wait for the 24h window."
+- `403 TOKEN_NOT_ALLOWED` → "That output token isn't on your agent's allowlist. Add it in the dashboard."
+- `400 UNSUPPORTED_INPUT_TOKEN` → "That token isn't on Sanafi's supported list — try a token Sanafi knows the price of."
+- `502 SIGNING_FAILURE` → "Sanafi's signing service hit an error. Retry with the same idempotency key."
+
+## External send
+
+Sending tokens to an external wallet is **not available in Phase 1**. It's coming in a future release with additional gating. If the user asks, redirect them:
+
+> "I can't send to an external wallet through Sanabot yet. Use the Sanafi app for that for now."
+
 ## What not to do
 
 - **Don't compute net worth by summing holdings.** Trust the BE figure.
 - **Don't fabricate prices** for symbols not in the catalog.
 - **Don't expose the API key** in any response — it's set via env var, never echoed.
-- **Don't claim to send/swap.** If the user asks for those flows, explain they aren't part of the current Sanabot tool catalogue and they should use the Sanafi app to act.
+- **Don't attempt a swap with a token Sanafi doesn't price.** Explain that tokens without a USD price can't be capped, so the swap is rejected — use `get_supported_tokens` to check what Sanafi supports.
+- **Don't attempt to send to an external wallet.** Redirect to the Sanafi app.

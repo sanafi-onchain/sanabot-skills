@@ -27,6 +27,8 @@ How to answer Sanafi card questions safely using the Sanabot MCP tools. For the 
 | "How much can I spend on my card?" / "What's my available credit?" | `get_card_balance` |
 | "What did I spend this month?" / "Show my card transactions" | `get_transaction_history` with `context: 'card'` |
 | "How much do I owe?" / "What's my balance due?" | `get_card_balance` (the `balanceDueUsd` field) |
+| "Top up my card" / "Fund my card" / "Deposit USDC to my card" | `card_deposit` (see prerequisites below) |
+| "Withdraw from my card" / "Move money off my card" | Not available through Sanabot — Sanafi app only |
 
 ## Card metadata: `get_card`
 
@@ -35,8 +37,6 @@ Returns one or more cards' agent-safe metadata:
 ```jsonc
 [
   {
-    "id": 1,
-    "cardId": "card-abc",
     "type": "virtual",
     "status": "active",
     "last4": "1234",
@@ -110,9 +110,44 @@ For mixed contexts ("what's happened in my account?"), omit `context` and you'll
 1. `get_transaction_history` with `context: 'card'`.
 2. Filter the results client-side by merchant/date — the BE doesn't filter by merchant name.
 
+## Card deposit: `card_deposit`
+
+Triggers: user wants to top up, fund, or deposit to their card balance.
+
+**Prerequisites before calling this tool:**
+1. Agent signing must be enabled on the user's wallet (one-time setup at `https://sana.bot/gateway/app/api-keys`). Without it, the call returns `403 DELEGATION_NOT_ENABLED`.
+2. The API key must carry the `write:card_deposit` scope (not included in `read:all`). Missing scope returns `403 INSUFFICIENT_SCOPE`.
+3. The deposit must not exceed the key's per-transaction cap (default $50) or rolling 24h daily cap (default $200). Exceeding either returns `403 CAP_EXCEEDED`.
+
+**Phase 1 restriction:** USDC is the only supported deposit token. Attempts with other tokens will fail.
+
+**Input:** `{ amount, idempotency_key? }` — `amount` is in USDC. Pass an `idempotency_key` (UUID) if retrying after a network error to avoid double-deposits.
+
+**Flow:**
+1. Confirm the user wants to deposit a specific USDC amount.
+2. Check prerequisites: agent signing enabled, scope present, amount within cap.
+3. Call `card_deposit` with the amount (and idempotency key if retrying).
+4. Surface the confirmation (transaction signature, resulting card balance) in plain language.
+
+**Error handling:**
+- `403 DELEGATION_NOT_ENABLED` → "Enable agent signing in the Sanafi dashboard first."
+- `403 INSUFFICIENT_SCOPE` → "Add `write:card_deposit` to your API key."
+- `403 CAP_EXCEEDED` → "This deposit exceeds your agent's spending cap — raise the cap in the dashboard or wait for the 24h window."
+- `502 SIGNING_FAILURE` → "Sanafi's signing service hit an error. Retry with the same idempotency key."
+
+## Card withdrawal
+
+Card withdrawal (card balance → crypto wallet) requires the user's wallet to sign a structured message. Privy's delegated signing keys cannot fulfill this — it's outside what agent signing covers.
+
+If the user asks you to withdraw from their card:
+
+> "Card withdrawal happens in the Sanafi mobile app — I can't do it for you from here."
+
+Don't attempt to construct a workaround or suggest an alternative tool. Just redirect clearly.
+
 ## What not to do
 
 - **Don't surface PAN, CVV, or cardholder PII even if the user insists.** They're not in the response; refuse politely and point at the Sanafi app.
-- **Don't suggest topping up with a token outside the `tokens` whitelist.** Deposits in non-whitelisted tokens may be lost.
-- **Don't claim to act.** Sanabot can't fund the card, dispute a transaction, or change limits. Those flows live in the Sanafi app.
-- **Don't infer "the card is broken" from a 403.** A 403 means the user's API key lacks `read:card` scope — recommend re-generating the key with the right scope.
+- **Don't suggest topping up with a token outside the `tokens` whitelist from `get_card_balance`.** Deposits in non-whitelisted tokens may be lost.
+- **Don't attempt card withdrawal through Sanabot.** Redirect to the Sanafi app, every time.
+- **Don't infer "the card is broken" from a 403.** A 403 on read tools means the user's API key lacks `read:card` scope — recommend re-generating the key with the right scope. A 403 on `card_deposit` may mean a missing write scope or delegation not set up — check the specific error code.

@@ -12,8 +12,12 @@ API keys carry one or more **scopes** that gate which skills they can call. You 
 | `read:transactions` | `get_transaction_history` |
 | `read:card` | `get_card`, `get_card_balance` |
 | `read:all` | Convenience grant — every `read:*` above. **Default in the dashboard.** |
+| `write:card_deposit` | `card_deposit` — deposits USDC from the user's Solana wallet to their Sanafi card balance |
+| `write:swap` | `wallet_swap` — executes a token swap via Jupiter on the user's behalf |
 
-Additional scopes will land as new skill packs ship. Watch the repo for releases.
+**Write scopes are NOT included in `read:all`.** They must be enabled explicitly per key in the dashboard. Requiring agent signing to be enabled on the user's wallet is a separate prerequisite — see the `using-sanabot` skill for full setup instructions.
+
+Additional scopes will land as new skill packs ship. Watch the repo for releases. Card withdrawal and external-send slots are not available in Phase 1 — they may land in a future release.
 
 ## Recommended setup
 
