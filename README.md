@@ -249,6 +249,26 @@ Once installed, ask your agent something only Sanabot can answer:
 
 If the agent returns a number, you're good. If it says it can't reach Sanabot or returns a 401/403, see the **Troubleshooting** section in [`skills/using-sanabot/SKILL.md`](skills/using-sanabot/SKILL.md#error-handling).
 
+## Keeping up to date
+
+New tools and skill updates ship through this repo. Claude Code (and similar marketplace clients) **cache the marketplace locally** — your agent will NOT see new tools or updated skill docs until you refresh.
+
+**Manual refresh in Claude Code:**
+
+```
+/plugins  →  Marketplaces tab  →  sanafi  →  Update marketplace
+```
+
+**Recommended** — enable auto-update so future releases land without manual steps:
+
+```
+/plugins  →  Marketplaces tab  →  sanafi  →  Enable auto-update
+```
+
+**Symptom of a stale marketplace:** the agent says "I can't do X" for something the current docs describe as supported (e.g. you read about `wallet_swap` here but the agent claims swap isn't available). Update the marketplace and restart the session.
+
+For non-Claude-Code clients (Cursor, Gemini CLI, etc.) that consume the skills via a local clone, `git pull origin main` inside the cloned repo is the equivalent step.
+
 ## What can my agent do?
 
 | Skill | Sample questions |
