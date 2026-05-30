@@ -115,9 +115,9 @@ For mixed contexts ("what's happened in my account?"), omit `context` and you'll
 Triggers: user wants to top up, fund, or deposit to their card balance.
 
 **Prerequisites before calling this tool:**
-1. Agent signing must be enabled on the user's wallet (one-time setup at `https://sana.bot/gateway/app/api-keys`). Without it, the call returns `403 DELEGATION_NOT_ENABLED`.
-2. The API key must carry the `write:card_deposit` scope (not included in `read:all`). Missing scope returns `403 INSUFFICIENT_SCOPE`.
-3. The deposit must not exceed the key's per-transaction cap (default $50) or rolling 24h daily cap (default $200). Exceeding either returns `403 CAP_EXCEEDED`.
+1. Agent signing must be enabled on the user's wallet (one-time setup at `https://sana.bot/gateway/app/api-keys`). Without it, the call returns `Agent signing not enabled for this user (status 403)`.
+2. The API key must carry the `write:card_deposit` scope (not included in `read:all`). A key without it is rejected with a `403` — scope enforcement lives in the Sanafi API, not the gateway.
+3. The deposit must not exceed the key's per-transaction cap (default $50) or rolling 24h daily cap (default $200). Exceeding them returns `Transaction exceeds per-transaction cap (status 403)` or `Transaction exceeds daily cap (status 403)`.
 
 **Phase 1 restriction:** USDC is the only supported deposit token. Attempts with other tokens will fail.
 
@@ -129,11 +129,11 @@ Triggers: user wants to top up, fund, or deposit to their card balance.
 3. Call `card_deposit` with the amount (and idempotency key if retrying).
 4. Surface the confirmation (transaction signature, resulting card balance) in plain language.
 
-**Error handling:**
-- `403 DELEGATION_NOT_ENABLED` → "Enable agent signing in the Sanafi dashboard first."
-- `403 INSUFFICIENT_SCOPE` → "Add `write:card_deposit` to your API key."
-- `403 CAP_EXCEEDED` → "This deposit exceeds your agent's spending cap — raise the cap in the dashboard or wait for the 24h window."
-- `502 SIGNING_FAILURE` → "Sanafi's signing service hit an error. Retry with the same idempotency key."
+**Error handling.** The agent receives the upstream message with the HTTP status appended, i.e. `<message> (status N)`:
+- `Agent signing not enabled for this user (status 403)` → "Enable agent signing in the Sanafi dashboard first."
+- a `403` with no agent-signing or cap message → the key is missing the `write:card_deposit` scope: "Add `write:card_deposit` to your API key."
+- `Transaction exceeds per-transaction cap (status 403)` / `Transaction exceeds daily cap (status 403)` → "This deposit exceeds your agent's spending cap — raise the cap in the dashboard or wait for the 24h window."
+- `Signing service unavailable (status 502)` → "Sanafi's signing service hit an error. Retry with the same idempotency key."
 
 ## Card withdrawal
 

@@ -55,7 +55,7 @@ Errors come back as MCP `tools/call` results with `isError: true` and a short me
 
 - **Scope:** `read:card`
 - **Input:** none
-- **Returns:** Card metadata — `id`, `type`, `status`, `last4`, `expirationMonth`, `expirationYear`. **PAN, CVV, and cardholder PII are never returned.** Use the Sanafi app to view those.
+- **Returns:** Card metadata — `type`, `status`, `last4`, `expirationMonth`, `expirationYear`. **PAN, CVV, cardholder PII, and internal card identifiers are never returned.** Use the Sanafi app to view those.
 
 ## `get_card_balance`
 
@@ -112,7 +112,8 @@ Errors come back as MCP `tools/call` results with `isError: true` and a short me
   - `output_mint: string` — mint address of the desired output token. Must be on the agent's allowlist.
   - `amount_in: string` — amount of the input token to swap as a decimal string (strictly positive; values ≤ 0 are rejected at validation).
   - `idempotency_key?: string` — optional UUID; auto-generated if omitted. Reuse the same key to safely retry after a network error.
-  - `swap_token_allowlist` semantics: absent or `null` → use Sanafi's active supported-tokens catalogue as the default allowlist. Non-empty array → that array overrides the default. Empty array `[]` → rejected at validation with `400` (pass `null` to explicitly reset to the catalogue default).
+
+  > The swap allowlist is **not** a tool input — the gateway's input schema is strict and accepts only the four fields above. The allowlist is an agent-level setting configured in the dashboard (defaults to Sanafi's active supported-tokens catalogue); the BE enforces it against `output_mint`.
 - **Returns:** After the MCP gateway unwraps the `{ success, data }` envelope, the agent receives:
 
   ```jsonc

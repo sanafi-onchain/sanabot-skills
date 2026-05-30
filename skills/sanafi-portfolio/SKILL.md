@@ -102,13 +102,13 @@ Internal identifiers (Privy ID, DB id, timestamps) are **deliberately not expose
 Triggers: user wants to swap, exchange, trade, convert, rebalance, or DCA into a token.
 
 **Prerequisites before calling this tool:**
-1. Agent signing must be enabled on the user's wallet (one-time setup at `https://sana.bot/gateway/app/api-keys`). Without it, the call returns `403 DELEGATION_NOT_ENABLED`.
-2. The API key must carry the `write:swap` scope (not included in `read:all`). Missing scope returns `403 INSUFFICIENT_SCOPE`.
-3. The swap value must not exceed the key's per-transaction cap (default $50) or rolling 24h daily cap (default $200). Exceeding either returns `403 CAP_EXCEEDED`.
+1. Agent signing must be enabled on the user's wallet (one-time setup at `https://sana.bot/gateway/app/api-keys`). Without it, the call returns `Agent signing not enabled for this user (status 403)`.
+2. The API key must carry the `write:swap` scope (not included in `read:all`). A key without it is rejected with a `403` — scope enforcement lives in the Sanafi API, not the gateway.
+3. The swap value must not exceed the key's per-transaction cap (default $50) or rolling 24h daily cap (default $200). Exceeding them returns `Transaction exceeds per-transaction cap (status 403)` or `Transaction exceeds daily cap (status 403)`.
 
 **Input and output constraints:**
-- `input_mint` must be a token Sanafi has a USD price for. Tokens without a price can't be capped in USD terms, so they are rejected with `400 UNSUPPORTED_INPUT_TOKEN`.
-- `output_mint` must be on the agent's token allowlist (defaults to Sanafi's active supported-tokens catalogue). Non-allowlisted output returns `403 TOKEN_NOT_ALLOWED`. The user can override the allowlist per-agent in the dashboard.
+- `input_mint` must be a token Sanafi has a USD price for. Tokens without a price can't be capped in USD terms, so they are rejected with `Input token not supported for agent swap (USD price unavailable) (status 400)`.
+- `output_mint` must be on the agent's token allowlist (defaults to Sanafi's active supported-tokens catalogue). Non-allowlisted output returns `Output token not on agent allowlist (status 403)`. The user can override the allowlist per-agent in the dashboard.
 
 **Input:** `{ input_mint, output_mint, amount_in, idempotency_key? }` — mint addresses (not symbols). Use `get_supported_tokens` to resolve a symbol to a mint address if needed. Pass an `idempotency_key` (UUID) if retrying after a network error to avoid duplicate swaps.
 
@@ -120,13 +120,13 @@ Triggers: user wants to swap, exchange, trade, convert, rebalance, or DCA into a
 5. Surface the confirmation (transaction signature, `amountIn`, `amountOut`) in plain language.
 6. Optionally call `get_holdings` to show the updated balance.
 
-**Error handling:**
-- `403 DELEGATION_NOT_ENABLED` → "Enable agent signing in the Sanafi dashboard first."
-- `403 INSUFFICIENT_SCOPE` → "Add `write:swap` to your API key."
-- `403 CAP_EXCEEDED` → "This swap exceeds your agent's spending cap — raise the cap in the dashboard or wait for the 24h window."
-- `403 TOKEN_NOT_ALLOWED` → "That output token isn't on your agent's allowlist. Add it in the dashboard."
-- `400 UNSUPPORTED_INPUT_TOKEN` → "That token isn't on Sanafi's supported list — try a token Sanafi knows the price of."
-- `502 SIGNING_FAILURE` → "Sanafi's signing service hit an error. Retry with the same idempotency key."
+**Error handling.** The agent receives the upstream message with the HTTP status appended, i.e. `<message> (status N)`:
+- `Agent signing not enabled for this user (status 403)` → "Enable agent signing in the Sanafi dashboard first."
+- a `403` with no agent-signing or cap message → the key is missing the `write:swap` scope: "Add `write:swap` to your API key."
+- `Transaction exceeds per-transaction cap (status 403)` / `Transaction exceeds daily cap (status 403)` → "This swap exceeds your agent's spending cap — raise the cap in the dashboard or wait for the 24h window."
+- `Output token not on agent allowlist (status 403)` → "That output token isn't on your agent's allowlist. Add it in the dashboard."
+- `Input token not supported for agent swap (USD price unavailable) (status 400)` → "That token isn't on Sanafi's supported list — try a token Sanafi knows the price of."
+- `Signing service unavailable (status 502)` → "Sanafi's signing service hit an error. Retry with the same idempotency key."
 
 ## External send
 

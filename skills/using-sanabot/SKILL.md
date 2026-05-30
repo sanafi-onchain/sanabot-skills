@@ -46,7 +46,7 @@ The MCP server currently exposes eleven tools. **All names are stable; treat the
 | `get_price` | Price + 24h change for one token (with `symbol`) or the whole catalog (without) | `read:prices` |
 | `get_notifications` | Recent notification feed (deposits, withdrawals, card alerts) | `read:notifications` |
 | `get_transaction_history` | Paginated tx history with optional `context: 'crypto' \| 'card'` filter | `read:transactions` |
-| `get_card` | Card metadata: `id`, `type`, `status`, `last4`, expiration | `read:card` |
+| `get_card` | Card metadata: `type`, `status`, `last4`, expiration | `read:card` |
 | `get_card_balance` | Spending power: credit limit, pending/posted charges, balance due, available USD | `read:card` |
 | `card_deposit` | Deposits USDC from the user's Solana wallet to their Sanafi card balance | `write:card_deposit` |
 | `wallet_swap` | Executes a token swap via Jupiter; input must be a token Sanafi prices | `write:swap` |
@@ -81,7 +81,7 @@ Write scopes are **not** included in `read:all` — they must be explicitly enab
 - `write:card_deposit` — required for `card_deposit`
 - `write:swap` — required for `wallet_swap`
 
-The user enables these when generating or editing a key in the dashboard. A key missing the scope is rejected by the gateway before the call reaches the API (the `requireScope` middleware returns `403`).
+The user enables these when generating or editing a key in the dashboard. A key missing the scope is rejected with a `403` — scope enforcement lives in the Sanafi API, not the gateway (the gateway forwards the call rather than checking the scope itself).
 
 ### 3. Per-agent spending caps not exceeded
 
@@ -115,7 +115,7 @@ The message the agent sees is taken directly from `error.message` in the upstrea
 | HTTP status | Message (exact) | What it means | What to tell the user |
 | --- | --- | --- | --- |
 | `401` | `Missing API key context` | `$SANABOT_API_KEY` missing, expired, or revoked | "Your Sanafi API key isn't recognized. Generate a fresh one at https://sana.bot/gateway/app/api-keys." |
-| `403` | *(gateway scope check — no upstream message)* | Key doesn't carry the scope this tool needs | "Your API key doesn't have the right permission. Re-generate with `read:all` or add the required scope." |
+| `403` | *(missing scope — rejected by the Sanafi API)* | Key doesn't carry the scope this tool needs | "Your API key doesn't have the right permission. Re-generate with `read:all` or add the required scope." |
 | `403` | `Agent signing not enabled for this user` | Agent signing not set up on this wallet | "Agent signing isn't enabled on your wallet. Go to the API keys page in the Sanafi dashboard and enable agent signing first." |
 | `403` | `Transaction exceeds per-transaction cap` | Write call exceeds the per-tx USD cap | "This action exceeds your agent's per-transaction cap. Raise it in the dashboard." |
 | `403` | `Transaction exceeds daily cap` | Write call exceeds the rolling 24h USD cap | "This action exceeds your agent's 24-hour spending cap. Wait for the window to reset or raise the cap in the dashboard." |
