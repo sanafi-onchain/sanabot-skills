@@ -1,0 +1,34 @@
+{
+  "name": "sanabot-skills",
+  "version": "0.1.0",
+  "description": "Sanafi skills for AI agents. Wraps the hosted Sanabot MCP gateway at mcp.sana.bot so your agent can answer questions about your wallet, prices, transactions, and card using your Sanafi API key.",
+  "author": {
+    "name": "Sanafi",
+    "url": "https://sana.bot"
+  },
+  "homepage": "https://sana.bot",
+  "repository": "https://github.com/sanafi-onchain/sanabot-skills",
+  "license": "MIT",
+  "keywords": [
+    "sanafi",
+    "sanabot",
+    "solana",
+    "defi",
+    "wallet",
+    "card",
+    "mcp",
+    "model-context-protocol",
+    "agent-skills"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Sanabot Skills",
+    "shortDescription": "Wallet, prices, transactions & card for your agent — via the hosted Sanabot MCP gateway.",
+    "longDescription": "Agent skills for the Sanafi super-app on Solana. Routes every call through the hosted MCP gateway at mcp.sana.bot using your Sanafi API key — no local infrastructure. Bundles three skill packs: using-sanabot (foundation: connection, tool catalogue, scopes, error handling), sanafi-portfolio (net worth, holdings, prices, account, notifications), and sanafi-card (card metadata, spending power, card transactions). Requires a Sanafi API key exposed as the SANABOT_API_KEY environment variable.",
+    "developerName": "Sanafi",
+    "category": "Finance",
+    "capabilities": ["Read", "Write"],
+    "websiteURL": "https://sana.bot"
+  }
+}

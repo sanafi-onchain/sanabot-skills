@@ -12,6 +12,7 @@ skills/
   sanafi-portfolio/     ← net worth, holdings, prices, account, notifications
   sanafi-card/          ← card metadata, spending power, card transactions
 .claude-plugin/         ← Claude Code plugin manifest
+.codex-plugin/          ← Codex CLI plugin manifest
 .mcp.json               ← MCP server config (loaded by plugins)
 docs/
   scopes.md             ← scope vocabulary + revocation
@@ -221,9 +222,36 @@ export SANABOT_API_KEY=sana_live_...
 </details>
 
 <details>
-<summary><b>Codex / Other Agents</b></summary>
+<summary><b>Codex CLI (recommended)</b></summary>
 
-For Codex and any other MCP-capable agent that supports Streamable HTTP transport:
+This repo ships a Codex plugin manifest (`.codex-plugin/plugin.json`) that bundles the skill packs and the MCP server config, so Codex discovers everything from one install.
+
+**1. Export your API key** in the shell that runs Codex (the bundled `.mcp.json` reads `${SANABOT_API_KEY}` at runtime):
+
+```bash
+export SANABOT_API_KEY=sana_live_...
+```
+
+**2. Add this repo as a plugin source and install it.** Inside Codex, open the plugin browser and install, or use the slash commands:
+
+```
+/plugin marketplace add sanafi-onchain/sanabot-skills
+/plugin install sanabot-skills
+/reload-plugins
+```
+
+> The interactive equivalent: run `/plugins`, select **Install plugin**, and pick `sanabot-skills`. Exact command surface follows the [official Codex plugins docs](https://developers.openai.com/codex/plugins) — check there if your Codex version differs.
+
+**3. Verify** — ask *"What's my Sanafi net worth?"*. A number means the skills + MCP server loaded.
+
+> **Rotating the key:** Codex expands `${SANABOT_API_KEY}` from the env at runtime — `export SANABOT_API_KEY=<new>` and restart Codex.
+
+</details>
+
+<details>
+<summary><b>Other MCP agents</b></summary>
+
+For any other MCP-capable agent that supports Streamable HTTP transport:
 
 1. Clone this repo: `git clone https://github.com/sanafi-onchain/sanabot-skills.git`
 2. Point your agent's MCP config at the URL with the Bearer header:
