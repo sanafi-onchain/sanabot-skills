@@ -55,13 +55,19 @@ Errors come back as MCP `tools/call` results with `isError: true` and a short me
 
 - **Scope:** `read:card`
 - **Input:** none
-- **Returns:** Card metadata — `type`, `status`, `last4`, `expirationMonth`, `expirationYear`. **PAN, CVV, cardholder PII, and internal card identifiers are never returned.** Use the Sanafi app to view those.
+- **Returns:** Card metadata — `type`, `status`, `last4`, `expirationMonth`, `expirationYear`. Never includes the full PAN or CVV (use `get_card_sensitive`); cardholder PII and internal card identifiers are not returned.
+
+## `get_card_sensitive`
+
+- **Scope:** `read:card_sensitive` (dedicated opt-in scope — NOT granted by `read:card`, `read`, or `read:all`)
+- **Input:** none
+- **Returns:** The active card's **full PAN + CVV** plus `last4`, `expirationMonth`, `expirationYear`. `null` when there's no active card. Sensitive — agents should call this **only on an explicit user request** for their full card details and must not persist or repeat the values. Cardholder PII (name/phone/address) is still not returned.
 
 ## `get_card_balance`
 
 - **Scope:** `read:card`
 - **Input:** none
-- **Returns:** Card spending power — credit limit, pending charges, posted charges, balance due, available USD. PAN/CVV/PII are stripped before the response leaves the Sanafi API.
+- **Returns:** Card spending power — credit limit, pending charges, posted charges, balance due, available USD. Full PAN/CVV are not included here (use `get_card_sensitive`); cardholder PII is stripped before the response leaves the Sanafi API.
 
 ---
 

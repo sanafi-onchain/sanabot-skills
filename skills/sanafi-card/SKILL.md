@@ -1,6 +1,6 @@
 ---
 name: sanafi-card
-description: Patterns for answering questions about the user's Sanafi card — metadata (status, last4, expiry), spending power (limits, charges, balance due), and card transactions. Load this when the user asks about their Sanafi card, what they've spent, or how much they can still spend. Requires the using-sanabot skill for connection/error handling context.
+description: Patterns for answering questions about the user's Sana card — metadata (status, last4, expiry), spending power (limits, charges, balance due), card transactions, full card number + CVV on explicit request, and guiding a user through end-to-end card registration and usage. Load this when the user asks about their Sana card, what they've spent, how much they can still spend, their full card details, or how to get/use a card. Requires the using-sanabot skill for connection/error handling context.
 license: MIT
 metadata:
   author: sanafi-onchain
@@ -17,18 +17,23 @@ tags:
 
 How to answer Sanafi card questions safely using the Sanabot MCP tools. For the full tool catalogue, scopes, and error handling, see the `using-sanabot` skill — load it alongside this one.
 
-**Privacy rule before anything else:** the gateway **strips PAN (full card number), CVV, and cardholder PII** at the boundary. You will never see them, and you should never ask the user to share them with you. If the user wants to view full card details, point them at the Sanafi app.
+**Privacy rules before anything else:**
+- The full card number (PAN) and CVV **are** available to you — but **only via the dedicated `get_card_sensitive` tool, and only when the user explicitly asks** ("what's my card number?", "I need my CVV to pay"). They are NOT included in `get_card` or `get_card_balance`.
+- **Never call `get_card_sensitive` proactively** or "just in case", never echo the PAN/CVV into summaries, titles, or anything that persists, and don't repeat them back more than needed to answer. Treat them like a password.
+- **Cardholder PII** (name, phone, home address) is still stripped at the boundary and not retrievable through any tool.
 
 ## Quick-reference: question → tool
 
 | User says | Tool |
 | --- | --- |
 | "Show me my card" / "What card do I have?" / "Is my card active?" | `get_card` |
+| "What's my full card number?" / "I need my CVV to pay" | `get_card_sensitive` (explicit request only) |
 | "How much can I spend on my card?" / "What's my available credit?" | `get_card_balance` |
 | "What did I spend this month?" / "Show my card transactions" | `get_transaction_history` with `context: 'card'` |
 | "How much do I owe?" / "What's my balance due?" | `get_card_balance` (the `balanceDueUsd` field) |
+| "How do I get a card?" / "How do I register?" / "How do I use my card?" | No tool — guide them (see "Guiding card registration & usage") |
 | "Top up my card" / "Fund my card" / "Deposit USDC to my card" | `card_deposit` (see prerequisites below) |
-| "Withdraw from my card" / "Move money off my card" | Not available through Sanabot — Sanafi app only |
+| "Withdraw from my card" / "Move money off my card" | Not available through Sanabot — Sana app only |
 
 ## Card metadata: `get_card`
 
@@ -46,11 +51,50 @@ Returns one or more cards' agent-safe metadata:
 ]
 ```
 
-That's the complete agent-visible projection. **There's no `cardNumber`, no `cvc`, no cardholder name, no billing address — those are not in the response and not retrievable through any tool.** If the user asks for them, explain:
+That's the metadata projection: `get_card` itself never includes `cardNumber` or `cvc`. If the user explicitly wants those, use `get_card_sensitive` (below) — don't try to read them from `get_card`. Cardholder name/billing address are never exposed.
 
-> "I can only see your card's last 4 digits and metadata. For the full card number or CVV, open the Sanafi app — it's deliberately scoped that way to keep agent integrations safe."
+If `get_card` returns an empty array, the user doesn't have a Sana card yet — guide them through registration (see "Guiding card registration & usage").
 
-If `get_card` returns an empty array, the user doesn't have a Sanafi card yet — direct them to onboard one in the app.
+## Full card number + CVV: `get_card_sensitive`
+
+Returns the **full PAN and CVV** of the user's active card. Call this **only on an explicit user request** for their full card details:
+
+```jsonc
+{
+  "type": "virtual",
+  "status": "active",
+  "last4": "1234",
+  "expirationMonth": 12,
+  "expirationYear": 2027,
+  "cardNumber": "4111111111111111",
+  "cvc": "123"
+}
+```
+
+Rules:
+- **Explicit-request only.** Never call it to "enrich" an answer, never preemptively. "Show my card" → `get_card` (metadata); only "show my full card number / CVV" → `get_card_sensitive`.
+- **Handle like a secret.** Give the values once, in your direct reply. Don't put them in summaries, memory, titles, or anything persisted; don't repeat them unprompted.
+- Requires the dedicated **`read:card_sensitive`** scope (NOT covered by `read:card`, `read`, or `read:all`) and an **active** card. Returns `null` when there's no active card.
+- A `403` means the key lacks `read:card_sensitive` — tell the user to regenerate the key with that scope ticked. Note `get_card` / `get_card_balance` may still work (they only need `read:card`); only the full-credential reveal needs the extra scope.
+
+## Guiding card registration & usage
+
+You **cannot register a card for the user** — KYC and the activation payment require the user themselves in the dashboard. But you can walk them through it. Registration is **fully self-serve on the web** at **https://sana.bot/gateway/app/card** (no mobile app needed).
+
+When `get_card` returns `[]` or `get_card_balance` returns `null`, the user has no card yet — offer to guide them. The end-to-end flow, all on that one page:
+
+1. **Pick your country.** Card availability is country-gated by the issuer (Rain); only eligible countries appear.
+2. **Pay the one-time activation fee — $10.** Charged in **USDC** from the user's Sana wallet. It's gasless (no SOL needed) and authorized with an emailed 6-digit code; the exact amount is shown before they approve.
+3. **Complete the KYC application.** A short form: name, date of birth, address, a few financial details — submitted to Rain for identity verification.
+4. **Verify identity.** An embedded document + selfie check (camera may be needed), with an "open in a new tab" fallback.
+5. **Accept the cardholder terms.** Once approved, the virtual card is issued automatically and shows up on the card page.
+
+**Using the card once issued:**
+- **Top up:** deposit USDC to raise spending power — you can do this directly with `card_deposit` ("top up my card with 25 USDC"), or the user can send to `cardContract.depositAddress` from `get_card_balance`.
+- **Spend:** anywhere Visa is accepted, online or in-app, using the number/expiry/CVV (`get_card_sensitive` on request).
+- **Track:** `get_card_balance` for spending power, `get_transaction_history` with `context: 'card'` for purchases.
+
+Keep guidance concise and link the page; don't try to collect KYC details or the payment through chat.
 
 ## Spending power: `get_card_balance`
 
@@ -147,7 +191,7 @@ Don't attempt to construct a workaround or suggest an alternative tool. Just red
 
 ## What not to do
 
-- **Don't surface PAN, CVV, or cardholder PII even if the user insists.** They're not in the response; refuse politely and point at the Sanafi app.
+- **Don't fetch PAN/CVV unless the user explicitly asks for them.** Use `get_card_sensitive` only on a direct request, hand the values over once, and never persist or repeat them. Cardholder PII (name/phone/address) is still never available — don't promise it.
 - **Don't suggest topping up with a token outside the `tokens` whitelist from `get_card_balance`.** Deposits in non-whitelisted tokens may be lost.
 - **Don't attempt card withdrawal through Sanabot.** Redirect to the Sanafi app, every time.
 - **Don't infer "the card is broken" from a 403.** A 403 on read tools means the user's API key lacks `read:card` scope — recommend re-generating the key with the right scope. A 403 on `card_deposit` may mean a missing write scope or delegation not set up — check the specific error code.

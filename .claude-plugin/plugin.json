@@ -1,16 +1,17 @@
 {
   "name": "sanabot-skills",
-  "description": "Sanafi skills for AI agents. Wraps the hosted Sanabot MCP gateway at mcp.sana.bot so your agent can answer questions about your wallet, prices, transactions, and card using your Sanafi API key.",
+  "description": "Sana Bot — agent skills for the Sana super-app on Solana. Wraps the hosted MCP gateway at mcp.sana.bot so your agent can answer questions about your wallet, prices, transactions, and card using your Sana API key.",
   "version": "0.1.0",
   "author": {
-    "name": "Sanafi",
+    "name": "Sana Bot",
     "url": "https://sana.bot"
   },
   "homepage": "https://sana.bot",
   "repository": "https://github.com/sanafi-onchain/sanabot-skills",
   "license": "MIT",
   "keywords": [
-    "sanafi",
+    "sana",
+    "sana-bot",
     "sanabot",
     "solana",
     "defi",

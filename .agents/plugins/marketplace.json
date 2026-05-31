@@ -1,0 +1,21 @@
+{
+  "name": "sana-bot",
+  "interface": {
+    "displayName": "Sana Bot"
+  },
+  "plugins": [
+    {
+      "name": "sanabot-skills",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/sanafi-onchain/sanabot-skills.git",
+        "ref": "main"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Finance"
+    }
+  ]
+}

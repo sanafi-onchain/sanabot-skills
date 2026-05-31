@@ -1,8 +1,8 @@
-# Sanabot Skills
+# Sana Bot Skills
 
-AI-agent skills for the [Sanafi](https://sana.bot) super-app on Solana. Install once, and your agent can answer questions about your **wallet, prices, transactions, and card** by routing through the hosted MCP gateway at `https://mcp.sana.bot`.
+**Sana Bot** — AI-agent skills for the [Sana](https://sana.bot) super-app on Solana. Install once, and your agent can answer questions about your **wallet, prices, transactions, and card** by routing through the hosted MCP gateway at `https://mcp.sana.bot`.
 
-> No local install of Sanafi infrastructure. Every call uses your **Sanafi API key** and lives a single round trip.
+> No local install of Sana infrastructure. Every call uses your **Sana API key** and lives a single round trip.
 
 ## What's in this repo
 
@@ -11,8 +11,9 @@ skills/
   using-sanabot/        ← foundational: connection, tool catalogue, scopes, errors
   sanafi-portfolio/     ← net worth, holdings, prices, account, notifications
   sanafi-card/          ← card metadata, spending power, card transactions
-.claude-plugin/         ← Claude Code plugin manifest
+.claude-plugin/         ← Claude Code plugin + marketplace manifests
 .codex-plugin/          ← Codex CLI plugin manifest
+.agents/plugins/        ← Codex CLI marketplace manifest
 .mcp.json               ← MCP server config (loaded by plugins)
 docs/
   scopes.md             ← scope vocabulary + revocation
@@ -45,10 +46,10 @@ Three steps. Claude Code's plugin loader handles skills but not URL-based MCP se
 
 ```bash
 claude plugin marketplace add sanafi-onchain/sanabot-skills
-claude plugin install sanabot-skills@sanafi
+claude plugin install sanabot-skills@sana-bot
 ```
 
-> Form is `<plugin-name>@<marketplace-name>` — the marketplace is `sanafi`, the plugin inside it is `sanabot-skills`.
+> Form is `<plugin-name>@<marketplace-name>` — the marketplace is `sana-bot`, the plugin inside it is `sanabot-skills`.
 
 **2. Export your API key in the shell that will run Claude Code:**
 
@@ -224,7 +225,7 @@ export SANABOT_API_KEY=sana_live_...
 <details>
 <summary><b>Codex CLI (recommended)</b></summary>
 
-This repo ships a Codex plugin manifest (`.codex-plugin/plugin.json`) that bundles the skill packs and the MCP server config, so Codex discovers everything from one install.
+This repo ships a Codex plugin manifest (`.codex-plugin/plugin.json`) plus a `sana-bot` marketplace manifest (`.agents/plugins/marketplace.json`), so Codex discovers the skill packs and the MCP server config from one install — same as Claude Code.
 
 **1. Export your API key** in the shell that runs Codex (the bundled `.mcp.json` reads `${SANABOT_API_KEY}` at runtime):
 
@@ -242,7 +243,7 @@ export SANABOT_API_KEY=sana_live_...
 
 > The interactive equivalent: run `/plugins`, select **Install plugin**, and pick `sanabot-skills`. Exact command surface follows the [official Codex plugins docs](https://developers.openai.com/codex/plugins) — check there if your Codex version differs.
 
-**3. Verify** — ask *"What's my Sanafi net worth?"*. A number means the skills + MCP server loaded.
+**3. Verify** — ask *"What's my Sana net worth?"*. A number means the skills + MCP server loaded.
 
 > **Rotating the key:** Codex expands `${SANABOT_API_KEY}` from the env at runtime — `export SANABOT_API_KEY=<new>` and restart Codex.
 
@@ -284,13 +285,13 @@ New tools and skill updates ship through this repo. Claude Code (and similar mar
 **Manual refresh in Claude Code:**
 
 ```
-/plugins  →  Marketplaces tab  →  sanafi  →  Update marketplace
+/plugins  →  Marketplaces tab  →  sana-bot  →  Update marketplace
 ```
 
 **Recommended** — enable auto-update so future releases land without manual steps:
 
 ```
-/plugins  →  Marketplaces tab  →  sanafi  →  Enable auto-update
+/plugins  →  Marketplaces tab  →  sana-bot  →  Enable auto-update
 ```
 
 **Symptom of a stale marketplace:** the agent says "I can't do X" for something the current docs describe as supported (e.g. you read about `wallet_swap` here but the agent claims swap isn't available). Update the marketplace and restart the session.
@@ -303,12 +304,13 @@ For non-Claude-Code clients (Cursor, Gemini CLI, etc.) that consume the skills v
 | --- | --- |
 | `using-sanabot` | Foundational — loads automatically, sets context. |
 | `sanafi-portfolio` | "What's my net worth?" · "What tokens do I own?" · "What's the price of SOL?" · "Did my deposit arrive?" |
-| `sanafi-card` | "How much can I spend on my card?" · "What did I spend last week?" · "Where do I top up my card?" |
+| `sanafi-card` | "How much can I spend on my card?" · "What did I spend last week?" · "What's my full card number?" · "How do I get a card?" · "Where do I top up my card?" |
 
 ## Privacy
 
-- The Sanabot gateway holds **no state**. Each request lives and dies in one HTTP round trip.
-- Card PAN, CVV, and cardholder PII are **never** returned to your agent — the BE strips them. Even with `read:card`, the agent only sees last-4 + balance.
+- The Sana Bot gateway holds **no state**. Each request lives and dies in one HTTP round trip.
+- **Full card number + CVV** are available only via the dedicated `get_card_sensitive` tool, gated by its own opt-in `read:card_sensitive` scope (a plain `read` / `read:all` key can **never** reveal them — you tick that scope explicitly per key). A well-behaved agent calls it **only when you explicitly ask** for your full card details — never proactively, and it won't persist them. `get_card` / `get_card_balance` never include them.
+- **Cardholder PII** (name, phone, home address) is **never** returned to your agent — the BE strips it.
 - Revoke any API key instantly from [`sana.bot/gateway/app/api-keys`](https://sana.bot/gateway/app/api-keys). The next request from that key returns 401.
 
 ## Support
