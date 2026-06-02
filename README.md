@@ -15,10 +15,15 @@ skills/
 .codex-plugin/          ← Codex CLI plugin manifest
 .agents/plugins/        ← Codex CLI marketplace manifest
 .mcp.json               ← MCP server config (loaded by plugins)
+llms-full.md            ← all skills + scopes + reference in ONE file (for no-skills-dir agents)
+scripts/
+  build-skills-bundle.ts ← regenerates llms-full.md from the sources
 docs/
   scopes.md             ← scope vocabulary + revocation
   skills-reference.md   ← input/output per tool the gateway exposes
 ```
+
+> `llms-full.md` is **generated** — after editing a skill or doc, run `node scripts/build-skills-bundle.ts` and commit the result. Never hand-edit it. (Runs directly on **Node ≥ 22.18 / 23.6** via native TypeScript stripping — no build step or deps.)
 
 Each `skills/<name>/SKILL.md` is **prompt-time instructions for the agent** — it loads them when reasoning about Sanafi-related questions. The skills tell the agent which MCP tool to call, when, and how to interpret the response.
 
@@ -250,6 +255,46 @@ export SANABOT_API_KEY=sana_live_...
 </details>
 
 <details>
+<summary><b>openclaw</b></summary>
+
+openclaw takes the skills as a single instruction blob, so use the consolidated [`llms-full.md`](llms-full.md) — one file that bundles every skill + scopes + tool reference.
+
+1. **Give openclaw [`llms-full.md`](llms-full.md) as its instructions / system context** (paste it, or point openclaw's instruction file at it). That one file is everything the agent needs to know — no `skills/` directory required.
+2. **Connect the MCP server** so the agent can actually call the tools:
+   ```
+   url: https://mcp.sana.bot/mcp
+   header: Authorization: Bearer ${SANABOT_API_KEY}
+   ```
+3. **Export your key** in the shell that runs openclaw:
+   ```bash
+   export SANABOT_API_KEY=sana_live_...
+   ```
+
+> **Rotating the key:** if openclaw's config uses `${SANABOT_API_KEY}` it re-reads on restart — just `export` the new value. If you pasted a literal key, update it there too.
+
+</details>
+
+<details>
+<summary><b>hermes-agent</b></summary>
+
+hermes-agent is onboarded the same way — one consolidated file plus the MCP connection.
+
+1. **Load [`llms-full.md`](llms-full.md) as hermes-agent's instructions / context.** It bundles `using-sanabot` + `sanafi-portfolio` + `sanafi-card` + scopes + tool reference into a single document.
+2. **Connect the MCP server:**
+   ```
+   url: https://mcp.sana.bot/mcp
+   header: Authorization: Bearer ${SANABOT_API_KEY}
+   ```
+3. **Export your key** in the shell that runs hermes-agent:
+   ```bash
+   export SANABOT_API_KEY=sana_live_...
+   ```
+
+> **Rotating the key:** same as above — env-var expansion re-reads on restart; a pasted literal must be updated in place.
+
+</details>
+
+<details>
 <summary><b>Other MCP agents</b></summary>
 
 For any other MCP-capable agent that supports Streamable HTTP transport:
@@ -260,7 +305,7 @@ For any other MCP-capable agent that supports Streamable HTTP transport:
    url: https://mcp.sana.bot/mcp
    header: Authorization: Bearer ${SANABOT_API_KEY}
    ```
-3. Configure your agent to read `skills/*/SKILL.md` files at prompt time. The exact mechanism varies; check your agent's "skills" or "system instructions" documentation. If your agent has no skills mechanism, paste the contents of `skills/using-sanabot/SKILL.md` into the system prompt.
+3. Configure your agent to read `skills/*/SKILL.md` files at prompt time. The exact mechanism varies; check your agent's "skills" or "system instructions" documentation. **If your agent has no skills mechanism, give it [`llms-full.md`](llms-full.md) as its system prompt** — that single file bundles every skill + scopes + tool reference.
 4. Export the key in the shell that runs your agent:
    ```bash
    export SANABOT_API_KEY=sana_live_...

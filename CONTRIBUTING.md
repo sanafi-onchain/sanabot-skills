@@ -58,6 +58,7 @@ If your idea fits one of those, please open an issue describing it — we'll rou
 - [ ] Each new or modified skill has valid YAML frontmatter (`name`, `description`, `license`, `metadata`, `tags`).
 - [ ] Instructions tell the agent the **right tool** for each user-facing question.
 - [ ] Privacy boundaries (no PAN/CVV/PII, no write claims, no key echoing) are respected.
+- [ ] After editing any `skills/*/SKILL.md` or `docs/*.md`, **regenerated the bundle**: `node scripts/build-skills-bundle.ts`, and committed the updated `llms-full.md`. (It's auto-generated — never hand-edit it.)
 - [ ] No drive-by reformatting unrelated to the change.
 - [ ] One PR per topic.
 
