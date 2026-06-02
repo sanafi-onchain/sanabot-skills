@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Builds llms-full.md — a single, paste-ready file that merges every skill +
+ * Builds SKILL.md (repo root) — a single, paste-ready file that merges every skill +
  * the scopes + tool-reference docs into one document, for agents that take a
  * single instruction/context blob instead of a skills directory (openclaw,
  * hermes-agent, etc.).
@@ -19,8 +19,9 @@ const { resolve } = require('node:path');
 
 const ROOT: string = resolve(__dirname, '..');
 
-// Generated output, written at the repo root.
-const OUTPUT_FILE: string = 'llms-full.md';
+// Generated output, written at the repo root. Note: this is the consolidated
+// "everything" bundle — distinct from the per-skill skills/<name>/SKILL.md files.
+const OUTPUT_FILE: string = 'SKILL.md';
 
 // Order matters: foundation first, then domain skills, then reference appendices.
 const SOURCES: string[] = [
