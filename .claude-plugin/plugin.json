@@ -1,7 +1,7 @@
 {
   "name": "sanabot-skills",
   "description": "Sana Bot — agent skills for the Sana super-app on Solana. Wraps the hosted MCP gateway at mcp.sana.bot so your agent can answer questions about your wallet, prices, transactions, and card using your Sana API key.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": {
     "name": "Sana Bot",
     "url": "https://sana.bot"
