@@ -4,7 +4,7 @@ description: Patterns for answering portfolio and wallet questions about a Sanaf
 license: MIT
 metadata:
   author: sanafi-onchain
-  version: "0.1.0"
+  version: "0.2.0"
 tags:
   - sanafi
   - sanabot
