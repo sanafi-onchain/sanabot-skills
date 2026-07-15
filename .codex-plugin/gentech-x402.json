@@ -1,0 +1,23 @@
+{
+  "name": "gentech-x402",
+  "description": "GenTech x402 skills \u2014 DeFi yields, token risk, wallet analytics, market intelligence, agent scan. Pay-per-request via x402 protocol on Base, Solana, Avalanche, BNB, and OKX.",
+  "version": "1.0.0",
+  "author": {
+    "name": "GenTech Labs",
+    "url": "https://gentechlabs.net"
+  },
+  "homepage": "https://gentechlabs.net",
+  "repository": "https://github.com/sanafi-onchain/sanabot-skills",
+  "license": "MIT",
+  "keywords": [
+    "gentech",
+    "x402",
+    "defi",
+    "blockchain",
+    "token-risk",
+    "wallet",
+    "agent",
+    "mcp",
+    "payments"
+  ]
+}
