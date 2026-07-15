@@ -15,6 +15,14 @@
         "repo": "sanafi-onchain/sanabot-skills"
       },
       "description": "Sana Bot skills: portfolio, prices, card, transactions, notifications. Routes every call through the hosted MCP gateway at mcp.sana.bot using the user's API key."
+    },
+    {
+      "name": "gentech-x402",
+      "source": {
+        "source": "github",
+        "repo": "sanafi-onchain/sanabot-skills"
+      },
+      "description": "GenTech x402 skills: DeFi yields, token risk, wallet analytics, market intelligence, agent scan. Pay-per-request via x402 on Base, Solana, Avalanche, BNB, and OKX."
     }
   ]
 }
