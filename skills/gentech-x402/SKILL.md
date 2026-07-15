@@ -124,8 +124,26 @@ Reference: [x402.org](https://x402.org) for protocol details.
 - **Version:** 6.0.0
 - **Bazaar indexed:** ✅
 
+## Integration: Sana Bot
+
+GenTech x402 works alongside **Sana Bot** (Solana agent banking). Sana handles wallet, card, and deposits via MCP. GenTech handles multi-chain intelligence via x402 REST.
+
+**Two-gateway pattern:**
+
+1. Agent discovers Sana tools via `mcp.sana.bot/mcp` (bearer token auth)
+2. Agent discovers GenTech tools via x402 gateway (402 → sign → settle)
+3. Each handles what it does best
+
+**Sana MCP tools available (when API key is configured):**
+- `get_account`, `get_card`, `get_card_balance`, `card_deposit`
+- `get_price`, `get_supported_tokens`, `wallet_swap`
+- `get_holdings`, `get_net_worth`, `get_transaction_history`
+
+See `references/sana-integration.md` for full mapping.
+
 ## References
 
 See `references/` for:
 - `endpoint-details.md` — Full request/response shapes for every endpoint
 - `x402-flow.md` — x402 payment protocol details for agent integration
+- `sana-integration.md` — Two-gateway pattern with Sana Bot
